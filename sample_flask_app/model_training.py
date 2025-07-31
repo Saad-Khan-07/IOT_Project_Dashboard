@@ -14,10 +14,8 @@ import os
 def load_and_prepare_data(file_path='equipment_anomaly_data.csv'):
     """Load and prepare the dataset for training"""
     try:
-        # Load the actual CSV file
         df = pd.read_csv(file_path)
         
-        # Convert faulty column to integer if it's in float format
         df['faulty'] = df['faulty'].astype(int)
         
         print(f"Data loaded successfully: {len(df)} rows")
@@ -29,18 +27,14 @@ def load_and_prepare_data(file_path='equipment_anomaly_data.csv'):
 
 def preprocess_data(df):
     """Preprocess the data by handling nulls and preparing for model training"""
-    # Handle missing values
     for col in ['temperature', 'pressure', 'vibration', 'humidity']:
         df[col] = df[col].fillna(df[col].median())
     
-    # Split features and target
     X = df.drop('faulty', axis=1)
     y = df['faulty']
     
-    # Split data into training and testing sets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     
-    # Define preprocessing for numerical and categorical features
     numerical_features = ['temperature', 'pressure', 'vibration', 'humidity']
     categorical_features = ['equipment', 'location']
     
@@ -99,11 +93,9 @@ def evaluate_model(model, X_test, y_test):
 
 def generate_visualization_data(df, model, X_test, y_test):
     """Generate data for visualizations"""
-    # 1. Feature importance
     rf_model = model.named_steps['classifier']
     feature_names = list(df.drop('faulty', axis=1).columns)
     
-    # Get feature names after preprocessing (including one-hot encoding)
     cat_cols = ['equipment', 'location']
     preprocessor = model.named_steps['preprocessor']
     cat_encoder = preprocessor.named_transformers_['cat'].named_steps['onehot']
@@ -117,15 +109,12 @@ def generate_visualization_data(df, model, X_test, y_test):
     # Get feature importances
     importances = rf_model.feature_importances_
     
-    # 2. Correlation matrix data (only for numerical features)
     numerical_features = ['temperature', 'pressure', 'vibration', 'humidity', 'faulty']
     corr_matrix = df[numerical_features].corr().round(2).to_dict()
     
-    # 3. Fault distribution by equipment and location
     fault_by_equipment = df.groupby('equipment')['faulty'].mean().to_dict()
     fault_by_location = df.groupby('location')['faulty'].mean().to_dict()
     
-    # Additional visualization: Feature value distributions by fault status
     feature_dist_by_fault = {}
     for feature in ['temperature', 'pressure', 'vibration', 'humidity']:
         feature_dist_by_fault[feature] = {
